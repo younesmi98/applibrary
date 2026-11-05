@@ -110,10 +110,10 @@ fun ImportScreen(app: NexusApp, onBack: () -> Unit) {
                 LabeledValue(tr("Same title exists", "هم‌نام موجوده"), num(review.size), tr("Never merged automatically", "هیچ‌وقت خودکار ادغام نمی‌شه"))
                 if (skipped > 0) LabeledValue(tr("Skipped lines", "خط‌های ردشده"), num(skipped))
                 review.take(8).forEach { Hint("• " + it.title) }
-                Button(enabled = fresh.isNotEmpty(), onClick = { scope.launch { val n = ImportData.apply(app.db, fresh); message = tr("Added $n games.", "${num(n)} بازی اضافه شد."); plan = null } }, Modifier.fillMaxWidth().height(48.dp)) {
+                Button(enabled = fresh.isNotEmpty(), onClick = { scope.launch { val n = ImportData.apply(app.db, fresh); message = tr("Added $n games.", "${num(n)} بازی اضافه شد."); plan = null } }, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                     Text(tr("Add ${fresh.size} new games", "افزودن ${num(fresh.size)} بازی‌ی جدید"))
                 }
-                OutlinedButton(enabled = review.isNotEmpty(), onClick = { scope.launch { val n = ImportData.apply(app.db, review); message = tr("Added $n games as separate entries.", "${num(n)} بازی به‌صورت ورودی جدا اضافه شد."); plan = null } }, Modifier.fillMaxWidth().height(48.dp)) {
+                OutlinedButton(enabled = review.isNotEmpty(), onClick = { scope.launch { val n = ImportData.apply(app.db, review); message = tr("Added $n games as separate entries.", "${num(n)} بازی به‌صورت ورودی جدا اضافه شد."); plan = null } }, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                     Text(tr("Add ${review.size} same-title games separately", "افزودن ${num(review.size)} بازی‌ی هم‌نام به‌صورت جدا"))
                 }
             }
