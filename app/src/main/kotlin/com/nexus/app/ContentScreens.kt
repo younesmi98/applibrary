@@ -108,9 +108,16 @@ fun CollectionsScreen(app: NexusApp, onBack: () -> Unit) {
     SubScreen(tr("Collections", "کلکسیون‌ها"), onBack) {
         Section(tr("New collection", "کلکسیون جدید")) {
             OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text(tr("Name", "نام")) })
-            Button(enabled = name.isNotBlank(), onClick = {
-                scope.launch { dao.insert(CollectionEntity(UUID.randomUUID().toString(), name.trim(), position = cols.size)); name = "" }
-            }, Modifier.fillMaxWidth().height(48.dp)) { Text(tr("Create", "ساختن")) }
+            Button(
+                enabled = name.isNotBlank(),
+                onClick = {
+                    scope.launch {
+                        dao.insert(CollectionEntity(UUID.randomUUID().toString(), name.trim(), position = cols.size))
+                        name = ""
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+            ) { Text(tr("Create", "ساختن")) }
         }
         if (cols.isEmpty()) Hint(tr("No collections yet. Add games to one from a game's page.", "هنوز کلکسیونی نیست. از صفحه‌ی یه بازی می‌تونی بازی‌ها رو اضافه کنی."))
         cols.forEach { c ->

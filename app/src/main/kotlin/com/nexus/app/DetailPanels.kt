@@ -72,6 +72,10 @@ fun RulesPanel(vm: DetailViewModel) {
         OutlinedTextField(exe, { exe = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text(tr("Executable name", "نام فایل اجرایی")) }, placeholder = { Text("eldenring.exe") })
         ChipRow(TrackingMode.values().toList(), mode, ::modeName) { mode = it }
         OutlinedTextField(idle, { idle = it.filter(Char::isDigit).take(3) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text(tr("Idle minutes (optional)", "دقیقه‌ی بی‌کاری (اختیاری)")) })
-        Button(enabled = exe.isNotBlank(), onClick = { vm.saveRule(exe, mode, idle.toIntOrNull()); exe = ""; idle = "" }, Modifier.fillMaxWidth()) { Text(tr("Save rule", "ذخیره‌ی قانون")) }
+        Button(
+            enabled = exe.isNotBlank(),
+            onClick = { vm.saveRule(exe, mode, idle.toIntOrNull()); exe = ""; idle = "" },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(tr("Save rule", "ذخیره‌ی قانون")) }
     }
 }
