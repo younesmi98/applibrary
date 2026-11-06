@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">NEXUS</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_library">Library</string>
+    <string name="nav_collections">Lists</string>
+    <string name="nav_activity">Activity</string>
+    <string name="nav_stats">Stats</string>
+    <string name="playtime_store">Store reported</string>
+    <string name="playtime_tracked">Tracked in NEXUS</string>
+    <string name="playtime_pc">Tracked on Windows</string>
+    <string name="no_data">Not enough data</string>
+</resources>

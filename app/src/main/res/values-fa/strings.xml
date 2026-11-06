@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">نکسوس</string>
+    <string name="nav_home">خانه</string>
+    <string name="nav_library">کتابخانه</string>
+    <string name="nav_collections">فهرست‌ها</string>
+    <string name="nav_activity">فعالیت</string>
+    <string name="nav_stats">آمار</string>
+    <string name="playtime_store">زمان گزارش‌شده توسط فروشگاه</string>
+    <string name="playtime_tracked">ثبت‌شده در NEXUS</string>
+    <string name="playtime_pc">ثبت‌شده روی ویندوز</string>
+    <string name="no_data">داده‌ی کافی نیست</string>
+</resources>

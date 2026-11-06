@@ -1,0 +1,11 @@
+# Known issues and gaps (honest list)
+- Nothing from phases 2-8 has been compiled or run in Android Studio. Expect build errors.
+- Compose screens for: Devices, Import review, Stats, Wrapped, Play Next, Wishlist, Journal are not written (HTML preview only).
+- PcRelay has no implementation, so PC pairing does not work end to end. The Windows tray app does not exist.
+- Epic and GOG: file import only. No live account sync.
+- No price provider, so wishlist price alerts never fire.
+- Wrapped image/PDF export is not written (data builder only).
+- Room queries that fill GameFacts, wiring of Backup to the real database, and notification scheduling are not written.
+- Artwork is not part of the JSON backup.
+- No performance test with 1,000 / 5,000 games has been run.
+- No accessibility test (TalkBack, font scaling) has been run.
