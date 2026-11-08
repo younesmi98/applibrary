@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.room.withTransaction
 import com.nexus.core.database.*
 import com.nexus.importers.*
-import com.nexus.playtime.*
 import com.nexus.polish.*
 import java.util.UUID
 
@@ -16,11 +15,10 @@ fun Context.writeText(uri: Uri, text: String): Boolean =
     runCatching { contentResolver.openOutputStream(uri, "wt")?.bufferedWriter()?.use { it.write(text) } != null }.getOrDefault(false)
 
 object BackupData {
-    /** Manual session time has pauses removed. Windows sessions are not included: they are re-synced from the PC. */
+    /** Games, personal status, notes, favorites and collections. Platform figures and sessions are not part of a backup. */
     suspend fun build(db: NexusDatabase): Backup {
         val d = db.insights()
         val sources = d.allSources().groupBy { it.gameId }
-        val pauses = d.allPauses().groupBy { it.sessionId }
         val items = d.collectionItems()
         return Backup(
             schemaVersion = BackupCodec.SCHEMA,
@@ -31,19 +29,28 @@ object BackupData {
                 BGame(g.id, g.title, first?.type?.name ?: "MANUAL", g.status.name, g.notes.orEmpty(), g.favorite,
                     manual = ss.none { it.officiallyOwned }, externalId = first?.externalId)
             },
-            sessions = d.finishedSessions().filter { it.method == SessionMethod.MANUAL }.mapNotNull { s ->
-                val end = s.endedAt ?: return@mapNotNull null
-                val active = PlaytimeCalc.activeMillis(s, pauses[s.id].orEmpty(), end)
-                if (active < 1000) null else BSession(s.id, s.gameId, s.startedAt, s.startedAt + active, "MANUAL")
-            },
-            adjustments = d.adjustments().map { BAdjustment(it.id, it.gameId, (it.deltaMillis / 60_000L).toInt(), it.createdAt, it.reason.orEmpty()) },
+            sessions = emptyList(),
+            adjustments = emptyList(),
             collections = d.collections().map { c -> BCollection(c.id, c.name, items.filter { it.collectionId == c.id }.map { it.gameId }) },
         )
     }
 
+    /** One row per game: what platforms reported, empty where they reported nothing. */
+    suspend fun libraryCsv(db: NexusDatabase): String {
+        val d = db.insights()
+        val by = d.allSources().groupBy { it.gameId }
+        val rows = d.games().sortedBy { it.title.lowercase() }.map { g ->
+            val ss = by[g.id].orEmpty(); val st = ss.toStats()
+            listOf(g.title, ss.joinToString("/") { it.type.name }, g.status.name, if (g.favorite) "yes" else "no",
+                st.forever?.toString().orEmpty(), st.twoWeeks?.toString().orEmpty(), st.lastPlayed?.toString().orEmpty())
+        }
+        return (listOf(listOf("title", "platforms", "status", "favorite", "playtime_minutes", "playtime_2weeks_minutes", "last_played_epoch_ms")) + rows)
+            .joinToString("\n") { r -> r.joinToString(",") { CsvExport.cell(it) } }
+    }
+
     suspend fun plan(db: NexusDatabase, b: Backup): RestorePlan {
         val d = db.insights()
-        return RestorePlanner.plan(b, d.games().map { it.id }.toSet(), d.finishedSessions().map { it.id }.toSet(), d.adjustments().map { it.id }.toSet())
+        return RestorePlanner.plan(b, d.games().map { it.id }.toSet(), emptySet(), emptySet())
     }
 
     /** Adds only what is missing. Nothing existing is changed or deleted. */
@@ -59,8 +66,6 @@ object BackupData {
             d.addSources(plan.newGames.map { g ->
                 GameSourceEntity(UUID.randomUUID().toString(), g.id, runCatching { SourceType.valueOf(g.source) }.getOrDefault(SourceType.MANUAL), g.externalId, false)
             })
-            d.addSessions(plan.newSessions.map { GameSessionEntity(it.id, it.gameId, SessionMethod.MANUAL, SessionState.FINISHED, it.startedAt, it.endedAt) })
-            d.addAdjustments(plan.newAdjustments.map { PlaytimeAdjustmentEntity(it.id, it.gameId, it.minutes * 60_000L, it.note.ifBlank { null }, it.at) })
             d.addCollections(b.collections.map { CollectionEntity(it.id, it.name) })
             d.addCollectionItems(b.collections.flatMap { c -> c.gameIds.filter { it in known }.map { CollectionItemEntity(c.id, it) } })
         }

@@ -5,6 +5,12 @@ package com.nexus.app
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.runtime.getValue
+<<<<<<< HEAD
+=======
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.semantics.Role
@@ -49,11 +55,28 @@ fun placeholderBrush(title: String): Brush {
     return Brush.verticalGradient(listOf(Color(a), Color(b)))
 }
 
+<<<<<<< HEAD
 /** Artwork when there is one; otherwise a tone block carrying the title, like the design sheet. */
 @Composable
 fun Cover(uri: String?, title: String, modifier: Modifier = Modifier, radius: Int = 8, showTitle: Boolean = true) {
     Box(Modifier.then(modifier).clip(RoundedCornerShape(radius.dp)).background(placeholderBrush(title))) {
         if (uri != null) AsyncImage(model = uri, contentDescription = null, modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+=======
+/**
+ * Artwork when there is one; otherwise a tone block carrying the title. A Steam vertical capsule that does not exist
+ * falls back to the store header image, and a failed download falls back to the tone block, so no card is ever blank.
+ */
+@Composable
+fun Cover(uri: String?, title: String, modifier: Modifier = Modifier, radius: Int = 8, showTitle: Boolean = true) {
+    var attempt by remember(uri) { mutableIntStateOf(0) }
+    val model = if (attempt == 1 && uri != null && "library_600x900" in uri) uri.replace("library_600x900.jpg", "header.jpg") else uri
+    val showArt = uri != null && attempt < 2
+    Box(Modifier.then(modifier).clip(RoundedCornerShape(radius.dp)).background(placeholderBrush(title))) {
+        if (showArt) AsyncImage(
+            model = model, contentDescription = null, modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop,
+            onError = { attempt = if (attempt == 0 && uri != null && "library_600x900" in uri) 1 else 2 },
+        )
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
         else if (showTitle) Text(
             title, Modifier.align(Alignment.BottomStart).padding(8.dp),
             style = MaterialTheme.typography.labelMedium, color = NexusColors.TextPrimary, maxLines = 3, overflow = TextOverflow.Ellipsis,
@@ -84,7 +107,11 @@ fun Panel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> 
 
 @Composable
 fun GlassButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+<<<<<<< HEAD
     GlassSurface(modifier.height(44.dp).pressClick(enabled, onClick), RoundedCornerShape(14.dp), Color(0xFF2A2A2E)) {
+=======
+    GlassSurface(modifier.height(44.dp).pressClick(enabled, onClick), RoundedCornerShape(14.dp), NexusColors.Card) {
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
         Text(text, Modifier.align(Alignment.Center), style = MaterialTheme.typography.labelLarge, color = if (enabled) NexusColors.TextPrimary else NexusColors.Muted)
     }
 }
@@ -162,17 +189,29 @@ fun PageTitle(text: String, subtitle: String? = null, trailing: (@Composable () 
 
 @Composable
 fun GlassIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit) {
+<<<<<<< HEAD
     GlassSurface(Modifier.size(44.dp).pressClick(true, onClick), CircleShape, Color(0xFF2A2A2E)) {
+=======
+    GlassSurface(Modifier.size(44.dp).pressClick(true, onClick), CircleShape, NexusColors.Card) {
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
         Icon(icon, description, Modifier.align(Alignment.Center).size(20.dp), tint = NexusColors.TextPrimary)
     }
 }
 
+<<<<<<< HEAD
 /** Teal pill button with the glow of the design board. */
+=======
+/** Emerald pill button with the glow of the design board. */
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 @Composable
 fun AccentButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector? = null) {
     Row(
         modifier.height(44.dp).clip(RoundedCornerShape(22.dp))
+<<<<<<< HEAD
             .background(Brush.horizontalGradient(listOf(Color(0xFF3CC8A8), Color(0xFF2A9D8F)))).pressClick(true, onClick).padding(horizontal = 16.dp),
+=======
+            .background(Brush.horizontalGradient(listOf(NexusColors.AccentMid, NexusColors.AccentDark))).pressClick(true, onClick).padding(horizontal = 16.dp),
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
         if (icon != null) Icon(icon, null, Modifier.size(18.dp), tint = NexusColors.OnAccent)
@@ -187,11 +226,19 @@ fun AccentButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifie
 @Composable
 fun SegmentedControl(count: Int, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, item: @Composable (index: Int, selected: Boolean) -> Unit) {
     val anim = LocalAnimations.current
+<<<<<<< HEAD
     GlassSurface(modifier.height(44.dp), RoundedCornerShape(22.dp), Color(0xFF232325)) {
         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().padding(3.dp)) {
             val w = maxWidth / count
             val x by animateDpAsState(w * selected.coerceAtLeast(0), if (anim) spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium) else snap(), label = "seg")
             if (selected >= 0) Box(Modifier.offset(x = x).width(w).fillMaxHeight().clip(RoundedCornerShape(19.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF3CC8A8), Color(0xFF2FB39A)))))
+=======
+    GlassSurface(modifier.height(44.dp), RoundedCornerShape(22.dp), NexusColors.SurfaceHigh) {
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().padding(3.dp)) {
+            val w = maxWidth / count
+            val x by animateDpAsState(w * selected.coerceAtLeast(0), if (anim) spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium) else snap(), label = "seg")
+            if (selected >= 0) Box(Modifier.offset(x = x).width(w).fillMaxHeight().clip(RoundedCornerShape(19.dp)).background(Brush.horizontalGradient(listOf(NexusColors.AccentMid, NexusColors.AccentDark))))
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
             Row(Modifier.fillMaxSize()) {
                 for (i in 0 until count) Box(
                     Modifier.weight(1f).fillMaxHeight().selectable(selected = i == selected, role = Role.Tab, onClick = { onSelect(i) }),

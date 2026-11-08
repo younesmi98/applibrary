@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Nexus" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#0E1012</item>
-        <item name="android:statusBarColor">#0E1012</item>
-        <item name="android:navigationBarColor">#0E1012</item>
+        <item name="android:windowBackground">#0D1110</item>
+        <item name="android:statusBarColor">#00000000</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">#00000000</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

@@ -8,7 +8,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.nexus.pc.TrackingMode
 
 @Composable
 fun JournalPanel(vm: DetailViewModel) {
@@ -53,6 +52,7 @@ fun CollectionsPanel(vm: DetailViewModel) {
         else ChipRow(all, null, { (if (it.id in mine) "✓ " else "") + it.name }) { vm.toggleCollection(it.id, it.id in mine) }
     }
 }
+<<<<<<< HEAD
 
 @Composable
 fun RulesPanel(vm: DetailViewModel) {
@@ -79,3 +79,5 @@ fun RulesPanel(vm: DetailViewModel) {
         ) { Text(tr("Save rule", "ذخیره‌ی قانون")) }
     }
 }
+=======
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)

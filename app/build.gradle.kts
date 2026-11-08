@@ -5,19 +5,41 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val releaseStoreFile = providers.environmentVariable("NEXUS_STORE_FILE").orNull
+val releaseStorePassword = providers.environmentVariable("NEXUS_STORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("NEXUS_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("NEXUS_KEY_PASSWORD").orNull
+val hasReleaseSigning = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { !it.isNullOrBlank() } &&
+    releaseStoreFile?.let { file(it).exists() } == true
+
 android {
     namespace = "com.nexus.app"
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.nexus.app"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0-debug"
+        targetSdk = 36
+        versionCode = 3
+        versionName = "0.3.0"
+    }
+    if (hasReleaseSigning) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
     buildTypes {
         debug { applicationIdSuffix = ".debug" }
-        release { isMinifyEnabled = false }
+        release {
+            isMinifyEnabled = false
+            // Release builds remain reproducible without a local key (unsigned APK).
+            // Set the four NEXUS_* environment variables to produce a distributable signed APK.
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -29,7 +51,7 @@ android {
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 
     // The phase folders are kept as-is and compiled together as one module.
-    val moduleDirs = listOf("core-database", "playtime", "platform-steam", "pc", "importers", "insights", "polish")
+    val moduleDirs = listOf("core-database", "platform-steam", "pc", "importers", "insights", "polish")
     sourceSets.getByName("main").java.srcDirs(moduleDirs.map { "../$it/src/main/kotlin" })
     sourceSets.getByName("test").java.srcDirs(moduleDirs.map { "../$it/src/test/kotlin" })
     testOptions { unitTests.isReturnDefaultValues = true }

@@ -2,11 +2,16 @@
 
 package com.nexus.app
 
+<<<<<<< HEAD
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+=======
+import android.content.Intent
+import android.net.Uri
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -31,13 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nexus.core.database.GameStatus
-import com.nexus.playtime.PlaytimeCalc
-import com.nexus.playtime.SessionState
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private fun LazyListScope.padded(content: @Composable ColumnScope.() -> Unit) {
     item { Column(Modifier.padding(horizontal = 20.dp), content = content) }
@@ -50,11 +50,15 @@ private fun android.content.Context.keepAccess(uri: Uri) {
 @Composable
 fun DetailScreen(vm: DetailViewModel, onBack: () -> Unit) {
     val ctx = LocalContext.current
+<<<<<<< HEAD
     val scope = rememberCoroutineScope()
+=======
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
     val ready by vm.ready.collectAsStateWithLifecycle()
     val game by vm.game.collectAsStateWithLifecycle()
     val sources by vm.sources.collectAsStateWithLifecycle()
     val tags by vm.tags.collectAsStateWithLifecycle()
+<<<<<<< HEAD
     val live by vm.activeSession.collectAsStateWithLifecycle()
     val otherRunning by vm.otherGameRunning.collectAsStateWithLifecycle()
     val pt by vm.playtime.collectAsStateWithLifecycle()
@@ -64,20 +68,32 @@ fun DetailScreen(vm: DetailViewModel, onBack: () -> Unit) {
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var showAdjust by remember { mutableStateOf(false) }
+=======
+    val stats by vm.stats.collectAsStateWithLifecycle()
+    val playingNow by vm.playingNow.collectAsStateWithLifecycle()
+    val account by vm.account.collectAsStateWithLifecycle()
+    val snapshots by vm.snapshots.collectAsStateWithLifecycle()
+    val images by vm.images.collectAsStateWithLifecycle()
+
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
     var showDelete by remember { mutableStateOf(false) }
-    var showPermInfo by remember { mutableStateOf(false) }
     var notes by remember(game?.id) { mutableStateOf(game?.notes ?: "") }
 
-    fun startSession() = scope.launch {
-        val id = vm.start()
-        if (id != null) SessionNotifier.push(ctx, id)
+    val pickCover = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { ctx.keepAccess(it); vm.setCover(it.toString()) } }
+    val pickBackground = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { ctx.keepAccess(it); vm.setBackground(it.toString()) } }
+    val pickGallery = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) { uris.forEach { ctx.keepAccess(it) }; vm.addImages(uris.map { it.toString() }) }
     }
+<<<<<<< HEAD
     val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { startSession() }
     val pickCover = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { ctx.keepAccess(it); vm.setCover(it.toString()) } }
     val pickBackground = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { ctx.keepAccess(it); vm.setBackground(it.toString()) } }
     val pickGallery = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) { uris.forEach { ctx.keepAccess(it) }; vm.addImages(uris.map { it.toString() }) }
     }
+=======
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 
     val g = game
     if (g == null) {
@@ -105,7 +121,14 @@ fun DetailScreen(vm: DetailViewModel, onBack: () -> Unit) {
                     if (meta.isNotBlank()) Text(meta, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         sources.forEach { PlatformBadge(it.type) }
+<<<<<<< HEAD
                         Text(g.status.label(), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.85f))
+=======
+                        if (playingNow) {
+                            Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF22C55E)))
+                            Text(tr("PLAYING NOW", "الان در حال بازی"), style = MaterialTheme.typography.labelMedium, color = Color(0xFF22C55E))
+                        } else Text(g.status.label(), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.85f))
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
                     }
                 }
             }
@@ -119,6 +142,7 @@ fun DetailScreen(vm: DetailViewModel, onBack: () -> Unit) {
 
         when (tab) {
             0 -> {
+<<<<<<< HEAD
                 padded {
                     Section(tr("Status", "وضعیت")) {
                         ChipRow(GameStatus.values().filter { it != GameStatus.HIDDEN }, g.status, { it.label() }) { vm.setStatus(it) }
@@ -280,13 +304,140 @@ fun DetailScreen(vm: DetailViewModel, onBack: () -> Unit) {
             confirmButton = { TextButton(onClick = { minutes.toLongOrNull()?.let { vm.addAdjustment(it, reason.ifBlank { null }) }; showAdjust = false }) { Text(tr("Save", "ذخیره")) } },
             dismissButton = { TextButton(onClick = { showAdjust = false }) { Text(tr("Cancel", "انصراف")) } },
         )
+=======
+                padded { PlatformStatsPanel(stats, sources.isNotEmpty(), playingNow) }
+                padded {
+                    Section(tr("Your status", "وضعیت تو")) {
+                        ChipRow(PersonalStatuses, g.status, { it.label() }) { vm.setStatus(it) }
+                        Hint(tr("\"Playing\" appears by itself when your platform reports the game running.", "«در حال بازی» وقتی پلتفرم اجرای بازی رو گزارش کنه خودش نمایش داده می‌شه."))
+                    }
+                }
+                val info = listOfNotNull(
+                    g.originalTitle?.let { tr("Original title", "عنوان اصلی") to it }, g.developer?.let { tr("Developer", "سازنده") to it },
+                    g.publisher?.let { tr("Publisher", "ناشر") to it }, g.releaseYear?.let { tr("Release year", "سال انتشار") to num(it) },
+                    g.platformLabel?.let { tr("Platform", "پلتفرم") to it }, g.genres?.let { tr("Genre", "ژانر") to it },
+                )
+                if (info.isNotEmpty()) padded { Section(tr("Details", "اطلاعات")) { info.forEach { (k, v) -> LabeledValue(k, v) } } }
+                g.description?.let { d -> padded { Section(tr("About", "درباره‌ی بازی")) { Text(d, style = MaterialTheme.typography.bodyMedium) } } }
+                padded {
+                    Section(tr("Notes", "یادداشت‌ها")) {
+                        OutlinedTextField(notes, { notes = it }, Modifier.fillMaxWidth(), minLines = 3, placeholder = { Text(tr("Your notes", "یادداشت‌های تو")) })
+                        if (notes != (g.notes ?: "")) TextButton(onClick = { vm.saveNotes(notes) }) { Text(tr("Save notes", "ذخیره‌ی یادداشت")) }
+                        if (tags.isNotEmpty()) Hint(tr("Tags: ", "برچسب‌ها: ") + tags.joinToString(tr(", ", "، ")))
+                    }
+                }
+                padded { CollectionsPanel(vm) }
+                padded { JournalPanel(vm) }
+                padded { TextButton(onClick = { showDelete = true }) { Text(tr("Remove from library", "حذف از کتابخانه"), color = NexusColors.Danger) } }
+            }
+
+            1 -> {
+                padded {
+                    Section(tr("Reported by platforms", "گزارش پلتفرم‌ها")) {
+                        if (sources.isEmpty() || sources.all { it.playtimeForeverMin == null && it.lastPlayedAt == null }) {
+                            Hint(tr("No platform has reported playtime for this game. Manual games have no playtime.", "هیچ پلتفرمی برای این بازی ساعت بازی گزارش نکرده. بازی‌های دستی ساعت بازی ندارن."))
+                        }
+                        sources.forEach { src ->
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    PlatformBadge(src.type); Text(src.type.label(), style = MaterialTheme.typography.titleMedium)
+                                }
+                                LabeledValue(tr("Total playtime", "مجموع ساعت بازی"), hoursMinutesLabel(src.playtimeForeverMin))
+                                LabeledValue(tr("Last two weeks", "دو هفته‌ی اخیر"), hoursMinutesLabel(src.playtime2WeeksMin))
+                                LabeledValue(tr("Last played", "آخرین اجرا"), relativeDay(src.lastPlayedAt))
+                                LabeledValue(tr("Last sync", "آخرین همگام‌سازی"), relativeDay(src.lastSyncAt))
+                            }
+                        }
+                        Hint(tr("Figures from different platforms are never added together. They are read-only.", "عددهای پلتفرم‌های مختلف هیچ‌وقت جمع زده نمی‌شن. فقط خواندنی‌ان."))
+                    }
+                }
+                val hist = snapshots.takeLast(8)
+                padded {
+                    Section(tr("Playtime at each sync", "ساعت بازی در هر همگام‌سازی")) {
+                        if (hist.size < 2) Hint(tr("History builds up with each sync. Nothing before your first sync is known.", "تاریخچه با هر همگام‌سازی ساخته می‌شه. چیزی از قبل اولین همگام‌سازی معلوم نیست."))
+                        else {
+                            val max = hist.maxOf { it.minutes }.toFloat()
+                            hist.forEach { BarRow(formatDate(it.capturedAt), it.minutes.toFloat(), max, hoursLabel(it.minutes)) }
+                        }
+                    }
+                }
+            }
+
+            else -> {
+                padded {
+                    Section(tr("Cover", "کاور")) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Cover(g.coverUri, g.title, Modifier.size(width = 110.dp, height = 154.dp), radius = 14, showTitle = false)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                GlassButton(tr("Choose image", "انتخاب تصویر"), { pickCover.launch(arrayOf("image/*")) })
+                                if (g.coverUri != null) GlassButton(tr("Remove", "حذف"), { vm.setCover(null) })
+                            }
+                        }
+                    }
+                }
+                padded {
+                    Section(tr("Background", "پس‌زمینه")) {
+                        Cover(g.backgroundUri, g.title, Modifier.fillMaxWidth().aspectRatio(16f / 9f), radius = 14, showTitle = false)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            GlassButton(tr("Choose image", "انتخاب تصویر"), { pickBackground.launch(arrayOf("image/*")) }, Modifier.weight(1f))
+                            if (g.backgroundUri != null) GlassButton(tr("Remove", "حذف"), { vm.setBackground(null) }, Modifier.weight(1f))
+                        }
+                        Hint(tr("The background is used at the top of this page. Without one, the cover is used.", "پس‌زمینه بالای همین صفحه استفاده می‌شه. اگه نباشه، کاور استفاده می‌شه."))
+                    }
+                }
+                padded {
+                    Section(tr("Gallery", "گالری")) {
+                        if (images.isEmpty()) Hint(tr("No images yet. Add screenshots or artwork from your phone.", "هنوز تصویری نیست. اسکرین‌شات یا آرت‌ورک رو از گوشی اضافه کن."))
+                        images.chunked(3).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                row.forEach { img ->
+                                    Box(Modifier.weight(1f).aspectRatio(1f)) {
+                                        Cover(img.uri, "", Modifier.fillMaxSize(), radius = 12, showTitle = false)
+                                        Box(
+                                            Modifier.align(Alignment.TopEnd).padding(4.dp).size(26.dp).clip(CircleShape).background(Color(0x99000000)).clickable { vm.removeImage(img.id) },
+                                            contentAlignment = Alignment.Center,
+                                        ) { Icon(Icons.Default.Close, tr("Remove image", "حذف تصویر"), Modifier.size(14.dp), tint = Color.White) }
+                                    }
+                                }
+                                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                            }
+                        }
+                        AccentButton(tr("Add images", "افزودن تصویر"), { pickGallery.launch(arrayOf("image/*")) }, Modifier.fillMaxWidth(), icon = NexusIcons.Plus)
+                    }
+                }
+            }
+        }
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
     }
 
     if (showDelete) AlertDialog(
         onDismissRequest = { showDelete = false },
         title = { Text(tr("Remove ${g.title}?", "حذف ${g.title}؟")) },
+<<<<<<< HEAD
         text = { Text(tr("This removes the library entry with its notes, sessions and gallery. Game files on your devices are never touched.", "این کار ورودی کتابخانه رو همراه یادداشت‌ها، جلسه‌ها و گالری‌اش حذف می‌کنه. فایل‌های بازی روی دستگاه‌هات هیچ‌وقت دست نمی‌خورن.")) },
+=======
+        text = { Text(tr("This removes the library entry with its notes and gallery. Game files on your devices are never touched.", "این کار ورودی کتابخانه رو همراه یادداشت‌ها و گالری‌اش حذف می‌کنه. فایل‌های بازی روی دستگاه‌هات هیچ‌وقت دست نمی‌خورن.")) },
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
         confirmButton = { TextButton(onClick = { showDelete = false; vm.delete(); onBack() }) { Text(tr("Remove", "حذف"), color = NexusColors.Danger) } },
         dismissButton = { TextButton(onClick = { showDelete = false }) { Text(tr("Cancel", "انصراف")) } },
     )
+}
+
+/** Read-only platform figures. Shows dashes where a platform gave no number, and says so. */
+@Composable
+private fun PlatformStatsPanel(stats: GameStats, hasSource: Boolean, playingNow: Boolean) {
+    Panel {
+        if (playingNow) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF22C55E)))
+            Text(tr("PLAYING NOW", "الان در حال بازی"), style = MaterialTheme.typography.labelLarge, color = Color(0xFF22C55E))
+        }
+        if (stats.forever == null && stats.lastPlayed == null) {
+            Text(if (hasSource) tr("The platform has not reported playtime for this game.", "پلتفرم برای این بازی ساعت بازی گزارش نکرده.") else tr("Added by hand: there is no platform playtime.", "دستی اضافه شده: ساعت بازی‌ای از پلتفرم نیست."), style = MaterialTheme.typography.bodyMedium, color = NexusColors.TextSecondary)
+        } else {
+            LabeledValue(tr("Total playtime", "مجموع ساعت بازی"), hoursLabel(stats.forever))
+            LabeledValue(tr("Last two weeks", "دو هفته‌ی اخیر"), hoursLabel(stats.twoWeeks))
+            LabeledValue(tr("Last played", "آخرین اجرا"), relativeDay(stats.lastPlayed))
+            LabeledValue(tr("Data from", "منبع داده"), stats.platform?.label() ?: "—", tr("Last sync ", "آخرین همگام‌سازی ") + relativeDay(stats.lastSync))
+        }
+    }
 }

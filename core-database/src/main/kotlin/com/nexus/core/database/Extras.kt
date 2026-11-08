@@ -4,9 +4,6 @@ import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nexus.pc.PcSessionEntity
-import com.nexus.playtime.GameSessionEntity
-import com.nexus.playtime.PlaytimeAdjustmentEntity
-import com.nexus.playtime.SessionPauseEntity
 import kotlinx.coroutines.flow.Flow
 
 /** Wishlist item. releaseEpochDay null = unknown date. No price is stored: no price provider exists. */
@@ -47,6 +44,23 @@ data class GameImageEntity(
     val createdAt: Long,
 )
 
+<<<<<<< HEAD
+=======
+/** One connected or manual platform account. Secrets (API keys) are never stored here. */
+@Entity(tableName = "platform_accounts")
+data class PlatformAccountEntity(
+    @PrimaryKey val provider: String,           // "STEAM"
+    val accountId: String?,                     // SteamID64
+    val displayName: String?,
+    val avatarUrl: String?,
+    val lastSyncAt: Long?,                      // last SUCCESSFUL sync
+    val lastError: String?,                     // short code of the last failure, null if the last sync worked
+    val currentAppId: String?,                  // set only when the platform itself reported a running game
+    val currentGameName: String?,
+    val currentCheckedAt: Long?,
+)
+
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 data class SourceRow(val gameId: String, val type: SourceType)
 data class SteamRow(val gameId: String, val minutes: Int)
 
@@ -60,10 +74,13 @@ interface InsightsDao {
         "SELECT s.gameId AS gameId, s.minutes AS minutes FROM steam_playtime_snapshots s " +
             "WHERE s.capturedAt = (SELECT MAX(x.capturedAt) FROM steam_playtime_snapshots x WHERE x.gameId = s.gameId)"
     ) suspend fun steamRows(): List<SteamRow>
-    @Query("SELECT * FROM game_sessions WHERE state = 'FINISHED'") suspend fun finishedSessions(): List<GameSessionEntity>
-    @Query("SELECT * FROM game_session_pauses") suspend fun allPauses(): List<SessionPauseEntity>
     @Query("SELECT * FROM pc_sessions") suspend fun pcSessions(): List<PcSessionEntity>
-    @Query("SELECT * FROM playtime_adjustments") suspend fun adjustments(): List<PlaytimeAdjustmentEntity>
+    @Query("SELECT * FROM games WHERE status != 'HIDDEN'") fun gamesFlow(): Flow<List<GameEntity>>
+    @Query("SELECT * FROM game_sources") fun allSourcesFlow(): Flow<List<GameSourceEntity>>
+    @Query("SELECT * FROM platform_accounts WHERE provider = :provider") fun account(provider: String): Flow<PlatformAccountEntity?>
+    @Query("SELECT * FROM platform_accounts WHERE provider = :provider") suspend fun accountOnce(provider: String): PlatformAccountEntity?
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsertAccount(a: PlatformAccountEntity)
+    @Query("DELETE FROM platform_accounts WHERE provider = :provider") suspend fun deleteAccount(provider: String)
     @Query("SELECT * FROM collections") suspend fun collections(): List<CollectionEntity>
     @Query("SELECT * FROM collection_items") suspend fun collectionItems(): List<CollectionItemEntity>
     @Query("SELECT * FROM collection_items WHERE gameId = :gameId") fun collectionsOf(gameId: String): Flow<List<CollectionItemEntity>>
@@ -83,8 +100,6 @@ interface InsightsDao {
     // Restore / import: add only, never replace an existing row.
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun addGames(items: List<GameEntity>)
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun addSources(items: List<GameSourceEntity>)
-    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun addSessions(items: List<GameSessionEntity>)
-    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun addAdjustments(items: List<PlaytimeAdjustmentEntity>)
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun addCollections(items: List<CollectionEntity>)
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun addCollectionItems(items: List<CollectionItemEntity>)
 }
@@ -105,3 +120,21 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_game_images_gameId ON game_images(gameId)")
     }
 }
+<<<<<<< HEAD
+=======
+
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE games ADD COLUMN genres TEXT")
+        db.execSQL("ALTER TABLE games ADD COLUMN platformLabel TEXT")
+        db.execSQL("ALTER TABLE game_sources ADD COLUMN playtimeForeverMin INTEGER")
+        db.execSQL("ALTER TABLE game_sources ADD COLUMN playtime2WeeksMin INTEGER")
+        db.execSQL("ALTER TABLE game_sources ADD COLUMN lastPlayedAt INTEGER")
+        db.execSQL("ALTER TABLE game_sources ADD COLUMN lastSyncAt INTEGER")
+        db.execSQL("CREATE TABLE IF NOT EXISTS platform_accounts (provider TEXT NOT NULL, accountId TEXT, displayName TEXT, avatarUrl TEXT, lastSyncAt INTEGER, lastError TEXT, currentAppId TEXT, currentGameName TEXT, currentCheckedAt INTEGER, PRIMARY KEY(provider))")
+        // "Playing" now only comes from a platform. A hand-set Playing becomes Backlog; nothing else is changed or deleted.
+        // The old session tables (game_sessions, game_session_pauses, playtime_adjustments) are left in the file untouched and unused.
+        db.execSQL("UPDATE games SET status = 'BACKLOG' WHERE status = 'PLAYING'")
+    }
+}
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)

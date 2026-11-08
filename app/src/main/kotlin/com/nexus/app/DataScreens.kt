@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nexus.importers.*
-import com.nexus.pc.DevicesViewModel
 import com.nexus.polish.*
 import kotlinx.coroutines.launch
 
@@ -37,7 +36,7 @@ fun BackupScreen(app: NexusApp, onBack: () -> Unit) {
         if (uri != null) scope.launch { message = if (ctx.writeText(uri, BackupCodec.encode(BackupData.build(app.db)))) tr("Backup saved.", "پشتیبان ذخیره شد.") else failWrite }
     }
     val exportCsv = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
-        if (uri != null) scope.launch { message = if (ctx.writeText(uri, CsvExport.sessions(BackupData.build(app.db)))) tr("Session CSV saved.", "فایل CSV جلسه‌ها ذخیره شد.") else failWrite }
+        if (uri != null) scope.launch { message = if (ctx.writeText(uri, BackupData.libraryCsv(app.db))) tr("Library CSV saved.", "فایل CSV کتابخانه ذخیره شد.") else failWrite }
     }
     val importJson = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
@@ -53,15 +52,15 @@ fun BackupScreen(app: NexusApp, onBack: () -> Unit) {
     SubScreen(tr("Backup and export", "پشتیبان‌گیری و خروجی"), onBack) {
         Section(tr("Export", "خروجی")) {
             Button(onClick = { exportJson.launch("nexus-backup.json") }, Modifier.fillMaxWidth().height(48.dp)) { Text(tr("Save backup (JSON)", "ذخیره‌ی پشتیبان (JSON)")) }
-            OutlinedButton(onClick = { exportCsv.launch("nexus-sessions.csv") }, Modifier.fillMaxWidth().height(48.dp)) { Text(tr("Save sessions (CSV)", "ذخیره‌ی جلسه‌ها (CSV)")) }
-            Hint(tr("Included: games, status, favorites, notes, phone sessions, manual adjustments, collections. Not included: artwork files, developer and year, tags, journal, wishlist, Windows sessions, store-reported playtime. Steam data comes back with a sync.", "شامل: بازی‌ها، وضعیت، موردعلاقه‌ها، یادداشت‌ها، جلسه‌های گوشی، تعدیل‌های دستی، کلکسیون‌ها. شامل نیست: فایل آرت‌ورک، سازنده و سال، برچسب‌ها، ژورنال، فهرست آرزوها، جلسه‌های ویندوز و زمان گزارش‌شده‌ی استور. داده‌ی استیم با همگام‌سازی برمی‌گرده."))
+            OutlinedButton(onClick = { exportCsv.launch("nexus-library.csv") }, Modifier.fillMaxWidth().height(48.dp)) { Text(tr("Export library (CSV)", "خروجی کتابخانه (CSV)")) }
+            Hint(tr("Backup includes games, status, favorites, notes and collections. It does not include artwork files, tags, journal, wishlist, or the hours platforms report; those come back with a sync.", "پشتیبان شامل بازی‌ها، وضعیت، موردعلاقه‌ها، یادداشت‌ها و کلکسیون‌هاست. فایل آرت‌ورک، برچسب‌ها، ژورنال، فهرست آرزوها و ساعت‌هایی که پلتفرم‌ها گزارش می‌دن توش نیست؛ اینا با همگام‌سازی برمی‌گردن."))
         }
         Section(tr("Restore", "بازگردانی")) {
             OutlinedButton(onClick = { importJson.launch(arrayOf("*/*")) }, Modifier.fillMaxWidth().height(48.dp)) { Text(tr("Choose a backup file", "انتخاب فایل پشتیبان")) }
             Hint(tr("Restore only adds what is missing. Nothing in your library is replaced or deleted.", "بازگردانی فقط چیزهای جاافتاده رو اضافه می‌کنه. هیچ چیزی از کتابخانه‌ات جایگزین یا حذف نمی‌شه."))
             pending?.let { (ok, plan) ->
-                Text(tr("${plan.newGames.size} new games, ${plan.newSessions.size} sessions, ${plan.newAdjustments.size} adjustments. ${plan.skippedExisting} already present.",
-                    "${num(plan.newGames.size)} بازی‌ی جدید، ${num(plan.newSessions.size)} جلسه، ${num(plan.newAdjustments.size)} تعدیل. ${num(plan.skippedExisting)} مورد از قبل وجود داره."))
+                Text(tr("${plan.newGames.size} new games. ${plan.skippedExisting} already present.",
+                    "${num(plan.newGames.size)} بازی‌ی جدید. ${num(plan.skippedExisting)} مورد از قبل وجود داره."))
                 ok.warnings.take(5).forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = NexusColors.Danger) }
                 Button(onClick = { scope.launch { BackupData.restore(app.db, ok.backup, plan); message = tr("Restored.", "بازگردانی شد."); pending = null } }, Modifier.fillMaxWidth().height(48.dp)) { Text(tr("Restore now", "الان بازگردانی کن")) }
             }
@@ -113,6 +112,7 @@ fun ImportScreen(app: NexusApp, onBack: () -> Unit) {
                 LabeledValue(tr("Same title exists", "هم‌نام موجوده"), num(review.size), tr("Never merged automatically", "هیچ‌وقت خودکار ادغام نمی‌شه"))
                 if (skipped > 0) LabeledValue(tr("Skipped lines", "خط‌های ردشده"), num(skipped))
                 review.take(8).forEach { Hint("• " + it.title) }
+<<<<<<< HEAD
                 Button(
                     enabled = fresh.isNotEmpty(),
                     onClick = { scope.launch { val n = ImportData.apply(app.db, fresh); message = tr("Added $n games.", "${num(n)} بازی اضافه شد."); plan = null } },
@@ -125,6 +125,12 @@ fun ImportScreen(app: NexusApp, onBack: () -> Unit) {
                     onClick = { scope.launch { val n = ImportData.apply(app.db, review); message = tr("Added $n games as separate entries.", "${num(n)} بازی به‌صورت ورودی جدا اضافه شد."); plan = null } },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                 ) {
+=======
+                Button(enabled = fresh.isNotEmpty(), onClick = { scope.launch { val n = ImportData.apply(app.db, fresh); message = tr("Added $n games.", "${num(n)} بازی اضافه شد."); plan = null } }, Modifier.fillMaxWidth().height(48.dp)) {
+                    Text(tr("Add ${fresh.size} new games", "افزودن ${num(fresh.size)} بازی‌ی جدید"))
+                }
+                OutlinedButton(enabled = review.isNotEmpty(), onClick = { scope.launch { val n = ImportData.apply(app.db, review); message = tr("Added $n games as separate entries.", "${num(n)} بازی به‌صورت ورودی جدا اضافه شد."); plan = null } }, Modifier.fillMaxWidth().height(48.dp)) {
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
                     Text(tr("Add ${review.size} same-title games separately", "افزودن ${num(review.size)} بازی‌ی هم‌نام به‌صورت جدا"))
                 }
             }
@@ -132,6 +138,7 @@ fun ImportScreen(app: NexusApp, onBack: () -> Unit) {
         message?.let { Text(it, color = NexusColors.Accent) }
     }
 }
+<<<<<<< HEAD
 
 @Composable
 fun DevicesScreen(app: NexusApp, onBack: () -> Unit) {
@@ -190,3 +197,5 @@ fun SettingsScreen(onBack: () -> Unit) {
         AboutRows()
     }
 }
+=======
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)

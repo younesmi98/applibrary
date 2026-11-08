@@ -25,6 +25,8 @@ data class GameEntity(
     val backgroundUri: String? = null,
     val createdAt: Long,
     val updatedAt: Long,
+    val genres: String? = null,
+    val platformLabel: String? = null,   // free label for manual games: PC, PlayStation, ...
 )
 
 /** A game can have several sources (Steam + GOG + manual install). */
@@ -39,6 +41,11 @@ data class GameSourceEntity(
     val type: SourceType,
     val externalId: String? = null,   // e.g. Steam AppID, null for manual
     val officiallyOwned: Boolean,     // true only for verified store imports
+    // Figures reported by the platform at the last sync. null = the platform gave no figure (not the same as 0).
+    val playtimeForeverMin: Int? = null,
+    val playtime2WeeksMin: Int? = null,
+    val lastPlayedAt: Long? = null,    // epoch millis
+    val lastSyncAt: Long? = null,
 )
 
 /** All fields optional: an executable is never required. Only stored locally, never uploaded. */
@@ -89,10 +96,6 @@ class Converters {
     @TypeConverter fun toStatus(v: String) = GameStatus.valueOf(v)
     @TypeConverter fun fromSource(v: SourceType) = v.name
     @TypeConverter fun toSource(v: String) = SourceType.valueOf(v)
-    @TypeConverter fun fromSessionMethod(v: com.nexus.playtime.SessionMethod) = v.name
-    @TypeConverter fun toSessionMethod(v: String) = com.nexus.playtime.SessionMethod.valueOf(v)
-    @TypeConverter fun fromSessionState(v: com.nexus.playtime.SessionState) = v.name
-    @TypeConverter fun toSessionState(v: String) = com.nexus.playtime.SessionState.valueOf(v)
     @TypeConverter fun fromTracking(v: com.nexus.pc.TrackingMode) = v.name
     @TypeConverter fun toTracking(v: String) = com.nexus.pc.TrackingMode.valueOf(v)
 }

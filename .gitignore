@@ -3,3 +3,7 @@ build/
 local.properties
 *.iml
 .idea/
+
+*.jks
+*.keystore
+nexus-release.jks

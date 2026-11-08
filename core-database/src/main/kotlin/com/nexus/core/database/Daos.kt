@@ -14,7 +14,7 @@ interface GameDao {
 
     /**
      * Paged library query so thousands of games stay cheap.
-     * Null filter = no filter. sort: 0 name, 1 recently added, 2 personal rating.
+     * Null filter = no filter. sort: 0 name, 1 recently added, 2 personal rating, 3 hours (platform figure), 4 last played (platform figure).
      * Search also matches original title, developer, publisher, notes and tags.
      */
     @Query(
@@ -28,16 +28,19 @@ interface GameDao {
           AND (:source IS NULL OR EXISTS (SELECT 1 FROM game_sources s WHERE s.gameId = g.id AND s.type = :source))
           AND (:status IS NULL OR g.status = :status)
           AND (:favoritesOnly = 0 OR g.favorite = 1)
+          AND (:recentSince = 0 OR EXISTS (SELECT 1 FROM game_sources s WHERE s.gameId = g.id AND s.lastPlayedAt >= :recentSince))
           AND (:collectionId IS NULL OR EXISTS (SELECT 1 FROM collection_items c WHERE c.gameId = g.id AND c.collectionId = :collectionId))
         ORDER BY
           CASE WHEN :sort = 1 THEN g.createdAt END DESC,
           CASE WHEN :sort = 2 THEN g.rating END DESC,
+          CASE WHEN :sort = 3 THEN (SELECT MAX(s.playtimeForeverMin) FROM game_sources s WHERE s.gameId = g.id) END DESC,
+          CASE WHEN :sort = 4 THEN (SELECT MAX(s.lastPlayedAt) FROM game_sources s WHERE s.gameId = g.id) END DESC,
           g.title COLLATE NOCASE ASC
         """
     )
     fun library(
         query: String, source: SourceType?, status: GameStatus?,
-        favoritesOnly: Int, collectionId: String?, sort: Int,
+        favoritesOnly: Int, collectionId: String?, sort: Int, recentSince: Long,
     ): PagingSource<Int, GameEntity>
 
     @Query("SELECT COUNT(*) FROM game_sources WHERE type = 'MANUAL' OR officiallyOwned = 0") fun manualCount(): Flow<Int>

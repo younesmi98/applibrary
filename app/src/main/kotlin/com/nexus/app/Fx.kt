@@ -74,7 +74,11 @@ val LocalAnimations = compositionLocalOf { true }
 /** Real blur needs Android 12 (API 31) and an effects level of High. Otherwise the surface is a denser frosted tint. */
 @Composable
 fun GlassSurface(
+<<<<<<< HEAD
     modifier: Modifier = Modifier, shape: Shape, tint: Color = Color(0xFF1E1E21), content: @Composable BoxScope.() -> Unit,
+=======
+    modifier: Modifier = Modifier, shape: Shape, tint: Color = NexusColors.Surface, content: @Composable BoxScope.() -> Unit,
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 ) {
     val env = LocalGlass.current
     val real = env.blur && env.state != null && Build.VERSION.SDK_INT >= 31

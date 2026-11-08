@@ -1,29 +1,22 @@
-# NEXUS implementation status
+# NEXUS 0.3.0 source status
 
-Nothing here has been compiled or run. The build environment used to write it has no Android SDK, no Kotlin compiler and no network.
-Only a brace/parenthesis balance check was run on the Kotlin files.
+This is a release-candidate source update, not a verified store release. The current package includes the eight-spoke iOS-style startup loader, Android 16 target preparation, edge-to-edge safe insets, and release signing configuration via environment variables.
 
-## What changed in this merge
-- All phase folders now form one Gradle project (`:app`). Phase folders are compiled together as source sets of the app module.
-- NexusDatabase now lists every entity from phases 2-5 (before this, playtime, Steam and PC entities were never registered). Version 4, migrations 1->2, 2->3, 3->4 registered.
-- Added: app module, manifest, theme, launcher icon, Application class, MainActivity.
-- Real screens: Library (paged, search, source/status filters, sort), Add Game (one screen, cover picker), Game Detail (status, favorite, session timer, notes, playtime by source, adjustments with undo, session history, delete library entry), About (honest feature list).
-- SessionActionReceiver written (notification Pause/Resume/Finish). Recovery dialog for unfinished sessions on app start.
-- Fixed: kotlin-test dependency for the playtime test; ServiceCompat.startForeground for older API levels.
-- GitHub Actions workflow builds the debug APK and runs unit tests: `.github/workflows/build.yml`.
+## Included
 
-## Added in the second pass (all uncompiled)
-- Screens: More hub, Stats, Wrapped (share as PNG), Play Next, Backlog assistant, Collections, Wishlist, Journal, Import from file (Epic JSON, GOG/other CSV, with review step), Backup and export (JSON, sessions CSV, restore that only adds), PC devices, Settings with effects level and reduce motion.
-- Detail page now has collections, journal and Windows tracking rule panels. Library has a collection filter.
-- Database v5: wishlist and journal tables, InsightsDao, migration 4->5.
-- insights and polish modules now read/write Room through InsightsLoader and BackupData.
-- Wrapped image export through FileProvider.
+- Graphite/emerald Compose theme and shared components.
+- Home, Library, game details, add/import, platform connections, statistics, More and Settings screens.
+- Grid/List, search, platform/status filters, sorting, favorites and collections.
+- Steam Web API client for owned games, recent playtime, player summary and current-game presence; Steam key is stored through Android Keystore-backed encrypted preferences.
+- Offline Room library and Coil artwork caching.
+- Manual game metadata entry and file-based importers.
+- Eight-spoke splash animation that draws the rotating/fading spokes directly on Canvas; respects the in-app Reduce Motion setting.
+- Android 16/API 36 compile/target configuration and edge-to-edge safe content layout.
+- Optional release signing configured from environment variables; signing key is not stored in this source archive.
 
-## Third pass: design and Persian (all uncompiled)
-- Whole UI rewritten around the uiSKILL rules: artwork-first library grid (adaptive columns, list toggle), hero detail page, Home dashboard, bottom navigation (Home, Library, Stats, More), sentence-case headings, sections instead of boxes (one emphasized block per screen), explicit type scale, 48dp touch targets, generated cover colours for games without artwork.
-- Persian everywhere in the app UI: `tr("English", "فارسی")` at every string, RTL layout, Jalali dates and Persian digits (ICU), language switch in Settings (Automatic / English / فارسی), notification text localized, Wrapped image drawn right-to-left in Persian. Back arrows mirror in RTL.
-- Notification now opens the app on tap and uses the app icon.
+## Known limitations / not release-verified
 
+<<<<<<< HEAD
 ## Fourth pass: match the design sheet, iOS feel (uncompiled)
 - First on-device check (screenshots from the user): the debug APK builds and runs, Persian and English both show, RTL works, bottom bar works.
 - Restyled after `nexus-screens.html`: graphite #141415, one teal accent #3CC8A8, soft teal/blue glow at the top of each page, glass blocks (translucent, no real blur), floating rounded bottom bar with thin line icons, 3-column posters with a small mono caption, tone-block covers that carry the game title (no big letter), hairline-separated value rows, text filters with a teal underline.
@@ -39,10 +32,16 @@ See docs/DESIGN_PASS.md for the library decisions, fonts and the exact list of w
 - Error text from the file parsers and backup decoder stays English.
 - Wishlist dates are typed in Gregorian (YYYY-MM-DD).
 - Contrast of the colour pairs was chosen by eye, not measured. No screen reader, zoom or tablet testing.
+=======
+- No build or unit tests could be executed in this environment because Gradle and Android SDK are absent and outbound DNS is unavailable. Run the CI workflow before distributing an APK.
+- This archive does not include a signed APK. A private keystore is required.
+- Epic is file-import only (Legendary/Heroic/CSV); no supported live Epic account sync.
+- The PC relay and Windows companion do not exist in this package. Manual entries can be organized, but Windows executable launch from the Android phone is not end-to-end implemented.
+- No full physical-device test on Galaxy A13 or Play Console review has been run.
+- Steam current-game presence is polling-based, requires public Game Details, and can be up to about one minute behind.
+- Steam provides total and recent playtime, not full historical day-by-day activity; charts only reflect snapshots collected by NEXUS syncs.
+- Artwork files are not included in the JSON backup.
+- Platform badges are generic marks rather than official licensed logos.
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 
-## Not done
-- PcRelay (Supabase or LAN) and the Windows tray app. Pairing codes are only generated locally.
-- Steam sign-in, network client and sync screen.
-- Metadata search, artwork download, duplicate merge, smart collections, game comparison, achievements UI.
-- Not stored, so related charts and modes stay empty: genres, hours to beat, achievement percent, completion dates.
-- No new unit tests for the Room-backed code.
+See `docs/BUILD_AND_RELEASE.md` for exact toolchain and signing steps, and `docs/KNOWN_ISSUES.md` for the remaining work.

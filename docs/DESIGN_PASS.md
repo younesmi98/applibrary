@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+> Partly superseded by docs/PRODUCT_REWORK.md: the session timer, Wrapped and PC items mentioned below were removed in 0.2.0, and the palette is now emerald.
+
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 # Design pass (iOS-style, glass) — what is real and what is not
 
 Nothing in this pass has been compiled or run. The build environment that produced it has no Android SDK, no Kotlin compiler and no network.

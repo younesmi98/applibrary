@@ -5,7 +5,10 @@ import com.nexus.core.database.*
 import java.util.UUID
 
 /** Raw fields from IPlayerService/GetOwnedGames. Missing playtime stays null, it is not turned into 0. */
-data class SteamGame(val appId: Long, val name: String, val playtimeForeverMinutes: Int?, val lastPlayedEpochSec: Long?)
+data class SteamGame(
+    val appId: Long, val name: String, val playtimeForeverMinutes: Int?, val lastPlayedEpochSec: Long?,
+    val playtime2WeeksMinutes: Int? = null,
+)
 
 sealed interface SteamFetch {
     data class Ok(val games: List<SteamGame>) : SteamFetch
@@ -26,6 +29,9 @@ interface SteamDao {
     @Query("SELECT id FROM games WHERE title = :title COLLATE NOCASE") suspend fun idsWithTitle(title: String): List<String>
     @Query("SELECT minutes FROM steam_playtime_snapshots WHERE gameId = :gameId ORDER BY capturedAt DESC LIMIT 1") suspend fun lastMinutes(gameId: String): Int?
     @Insert suspend fun insertSnapshot(s: SteamPlaytimeSnapshotEntity)
+    @Query("SELECT * FROM steam_playtime_snapshots WHERE gameId = :gameId ORDER BY capturedAt") fun history(gameId: String): kotlinx.coroutines.flow.Flow<List<SteamPlaytimeSnapshotEntity>>
+    @Query("UPDATE game_sources SET playtimeForeverMin = :forever, playtime2WeeksMin = :twoWeeks, lastPlayedAt = :lastPlayed, lastSyncAt = :syncedAt WHERE type = 'STEAM' AND externalId = :appId")
+    suspend fun updateStats(appId: String, forever: Int?, twoWeeks: Int?, lastPlayed: Long?, syncedAt: Long)
 }
 
 data class SyncReport(val added: Int, val updated: Int, val needsReview: List<String>, val privateProfile: Boolean = false)
@@ -49,6 +55,8 @@ class SteamSyncer(private val db: NexusDatabase, private val dao: SteamDao, priv
             }
             if (existing != null) updated++
             val minutes = g.playtimeForeverMinutes
+            // Only the figures the platform gave are stored. A missing field stays null, it never becomes 0.
+            dao.updateStats(g.appId.toString(), minutes, g.playtime2WeeksMinutes, g.lastPlayedEpochSec?.times(1000), now())
             if (minutes != null && dao.lastMinutes(gameId) != minutes)
                 dao.insertSnapshot(SteamPlaytimeSnapshotEntity(gameId = gameId, minutes = minutes, capturedAt = now()))
         }

@@ -9,11 +9,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.nexus.insights.*
+<<<<<<< HEAD
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -38,48 +37,57 @@ fun MoreScreen(go: (Screen) -> Unit) {
         Spacer(Modifier.height(120.dp))
     }
 }
+=======
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 
+/** Statistics built only from what platforms reported. There is no manual time and no invented history. */
 @Composable
 fun StatsScreen(app: NexusApp) {
     val snap by produceState<InsightsSnapshot?>(null) { value = InsightsLoader.load(app.db) }
     Column(Modifier.fillMaxSize().padding(horizontal = 20.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(28.dp)) {
-        PageTitle(tr("Stats", "آمار"))
+        PageTitle(tr("Statistics", "آمار"))
         val s = snap
         if (s == null) { StatsSkeleton(); return@Column }
+<<<<<<< HEAD
         if (s.games.isEmpty()) { EmptyState(tr("No data yet", "هنوز داده‌ای نیست"), tr("Stats appear once you add games and track time.", "با اضافه‌کردن بازی و ثبت زمان، آمار اینجا پر می‌شه.")); return@Column }
         val st = Stats.library(s.games)
         val zone = ZoneId.systemDefault()
         val monthly = Stats.monthly(s.sessions, zone)
+=======
+        if (s.cards.isEmpty()) { EmptyState(tr("No data yet", "هنوز داده‌ای نیست"), tr("Statistics appear once games are in your library.", "وقتی بازی‌ها وارد کتابخانه بشن، آمار اینجا پر می‌شه.")); return@Column }
+        val cards = s.cards
+        val known = cards.filter { it.stats.forever != null }
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
 
         Section(tr("Library", "کتابخانه")) {
-            LabeledValue(tr("Games", "بازی‌ها"), num(st.totalGames))
-            LabeledValue(tr("Completed", "تمام‌شده"), num(st.completed))
-            LabeledValue(tr("Currently playing", "در حال بازی"), num(st.currentlyPlaying))
-            LabeledValue(tr("Never played", "هیچ‌وقت بازی‌نشده"), num(st.unplayed))
-            LabeledValue(tr("Favorites", "موردعلاقه‌ها"), num(st.favorites))
+            LabeledValue(tr("Games", "بازی‌ها"), num(cards.size))
+            LabeledValue(tr("Favorites", "موردعلاقه‌ها"), num(cards.count { it.game.favorite }))
+            LabeledValue(
+                tr("Total playtime", "مجموع ساعت بازی"), if (known.isEmpty()) "—" else hoursLabel(known.sumOf { it.stats.forever!!.toLong() }.toInt()),
+                if (known.isEmpty()) tr("No platform has reported playtime yet", "هنوز هیچ پلتفرمی ساعت بازی گزارش نکرده") else tr("As reported by connected platforms, for ${known.size} games", "طبق گزارش پلتفرم‌های متصل، برای ${num(known.size)} بازی"),
+            )
         }
-        Section(tr("Playtime, two separate numbers", "زمان بازی، دو عدد جدا")) {
-            LabeledValue(tr("Store reported", "گزارش استور"), formatDuration(st.storeMinutesTotal * 60_000L), tr("Only games where a store gave a number", "فقط بازی‌هایی که استور عدد داده"))
-            LabeledValue(tr("Recorded by NEXUS", "ثبت‌شده توسط NEXUS"), formatDuration(st.trackedMinutesTotal * 60_000L), tr("PC and phone sessions, without manual adjustments", "جلسه‌های PC و گوشی، بدون تعدیل دستی"))
+        val perPlatform = cards.flatMap { c -> c.sources.map { it.type }.distinct() }.groupingBy { it }.eachCount()
+        if (perPlatform.isNotEmpty()) Section(tr("Games per platform", "بازی‌ها به تفکیک پلتفرم")) {
+            val max = perPlatform.values.max().toFloat()
+            perPlatform.entries.sortedByDescending { it.value }.forEach { BarRow(it.key.label(), it.value.toFloat(), max, num(it.value)) }
         }
-        if (st.gamesPerSource.isNotEmpty()) Section(tr("Games per source", "بازی‌ها به تفکیک منبع")) {
-            val max = st.gamesPerSource.values.max().toFloat()
-            st.gamesPerSource.entries.sortedByDescending { it.value }.forEach { BarRow(it.key, it.value.toFloat(), max, num(it.value)) }
+        val minutesPerPlatform = cards.flatMap { it.sources }.filter { it.playtimeForeverMin != null }.groupBy { it.type }.mapValues { e -> e.value.sumOf { it.playtimeForeverMin!!.toLong() } }
+        if (minutesPerPlatform.isNotEmpty()) Section(tr("Playtime per platform", "ساعت بازی به تفکیک پلتفرم")) {
+            val max = minutesPerPlatform.values.max().toFloat()
+            minutesPerPlatform.entries.sortedByDescending { it.value }.forEach { BarRow(it.key.label(), it.value.toFloat(), max, hoursLabel(it.value.toInt())) }
         }
-        if (st.mostTracked.isNotEmpty()) Section(tr("Most tracked games", "بیشترین زمان ثبت‌شده")) {
-            val max = st.mostTracked.first().second.toFloat()
-            st.mostTracked.forEach { (t, m) -> BarRow(t, m.toFloat(), max, formatDuration(m * 60_000L)) }
+        val top = known.filter { it.stats.forever!! > 0 }.sortedByDescending { it.stats.forever }.take(8)
+        if (top.isNotEmpty()) Section(tr("Most played", "بیشترین ساعت بازی")) {
+            val max = top.first().stats.forever!!.toFloat()
+            top.forEach { BarRow(it.game.title, it.stats.forever!!.toFloat(), max, hoursLabel(it.stats.forever)) }
         }
-        Section(tr("Monthly activity", "فعالیت ماهانه")) {
-            val start = monthly.coverageStart
-            if (start == null) Hint(tr("No sessions recorded yet. This fills in as you track time.", "هنوز جلسه‌ای ثبت نشده. با ثبت زمان این بخش پر می‌شه."))
-            else {
-                Hint(tr("History starts ", "تاریخچه از ") + formatDay(start.atZone(zone).toLocalDate()) + tr(". Nothing before that was recorded.", " شروع می‌شه. قبل از اون چیزی ثبت نشده."))
-                val rows = monthly.minutesPerMonth.entries.toList().takeLast(12)
-                val max = rows.maxOf { it.value }.toFloat()
-                rows.forEach { BarRow(digits(it.key.toString()), it.value.toFloat(), max, formatDuration(it.value * 60_000L)) }
-            }
+        val recent2 = cards.filter { (it.stats.twoWeeks ?: 0) > 0 }.sortedByDescending { it.stats.twoWeeks }.take(5)
+        if (recent2.isNotEmpty()) Section(tr("Last two weeks", "دو هفته‌ی اخیر")) {
+            val max = recent2.first().stats.twoWeeks!!.toFloat()
+            recent2.forEach { BarRow(it.game.title, it.stats.twoWeeks!!.toFloat(), max, hoursLabel(it.stats.twoWeeks)) }
         }
+<<<<<<< HEAD
         Hint(tr("Genre and achievement charts need data that is not stored yet, so they are not shown.", "نمودار ژانر و اچیومنت به داده‌ای نیاز داره که هنوز ذخیره نمی‌شه، برای همین نشون داده نمی‌شه."))
         Spacer(Modifier.height(120.dp))
     }
@@ -99,13 +107,19 @@ fun WrappedScreen(app: NexusApp, onBack: () -> Unit) {
         if (w == null) {
             EmptyState(tr("Not enough data for ${num(year)}", "برای ${num(year)} داده‌ی کافی نیست"), tr("Wrapped only uses sessions NEXUS recorded in that year. Store hours have no dates, so they are not counted.", "مرور سال فقط از جلسه‌هایی استفاده می‌کنه که NEXUS تو اون سال ثبت کرده. ساعت‌های استور تاریخ ندارن و حساب نمی‌شن."))
             return@SubScreen
+=======
+        val lastPlayed = cards.filter { it.stats.lastPlayed != null }.sortedByDescending { it.stats.lastPlayed }.take(5)
+        if (lastPlayed.isNotEmpty()) Section(tr("Recently played", "اخیراً بازی‌شده")) {
+            lastPlayed.forEach { LabeledValue(it.game.title, relativeDay(it.stats.lastPlayed)) }
+>>>>>>> 7d946ca (NEXUS 0.3.0 redesign and release preparation)
         }
-        Panel {
-            Text("NEXUS ${num(year)}", style = MaterialTheme.typography.titleLarge, color = NexusColors.Accent)
-            WrappedImage.lines(w).forEach { (l, v) -> LabeledValue(l, v) }
+        Section(tr("By status", "بر اساس وضعیت")) {
+            val byStatus = cards.groupingBy { it.game.status }.eachCount()
+            val max = byStatus.values.max().toFloat()
+            byStatus.entries.sortedByDescending { it.value }.forEach { BarRow(it.key.label(), it.value.toFloat(), max, num(it.value)) }
         }
-        Button(onClick = { WrappedImage.share(ctx, w) }, Modifier.fillMaxWidth().height(52.dp)) { Text(tr("Share as image", "اشتراک‌گذاری به‌صورت تصویر")) }
-        Hint(tr("Completed-game counts are left out: completion dates are not recorded yet.", "تعداد بازی‌های تمام‌شده نمایش داده نمی‌شه چون تاریخ تکمیل هنوز ثبت نمی‌شه."))
+        Hint(tr("Steam only reports totals, so there is no day-by-day chart. Each sync is saved, and a per-game history appears on the game page as syncs add up.", "استیم فقط مجموع رو گزارش می‌ده، برای همین نمودار روزانه نیست. هر همگام‌سازی ذخیره می‌شه و تاریخچه‌ی هر بازی تو صفحه‌ی خودش با زیاد شدن همگام‌سازی‌ها ساخته می‌شه."))
+        Spacer(Modifier.height(120.dp))
     }
 }
 
